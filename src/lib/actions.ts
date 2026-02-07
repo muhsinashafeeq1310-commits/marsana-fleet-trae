@@ -52,6 +52,69 @@ export async function signOut() {
   redirect('/login')
 }
 
+export async function createUser(prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const currentUser = await getCurrentUser()
+
+  // Only HQ or Super Admin can create users
+  if (!currentUser || !['super_admin', 'hq'].includes(currentUser.role)) {
+    return { success: false, message: 'Unauthorized: Only HQ admins can create users.' }
+  }
+
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const fullName = formData.get('full_name') as string
+  const role = formData.get('role') as any
+  const branchId = formData.get('branch_id') as string || null
+  const phone = formData.get('phone') as string || null
+
+  if (!email || !password || !fullName || !role) {
+    return { success: false, message: 'Please fill in all required fields.' }
+  }
+
+  try {
+    // 1. Create the user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName }
+    })
+
+    if (authError) {
+      return { success: false, message: authError.message }
+    }
+
+    if (!authData.user) {
+      return { success: false, message: 'Failed to create authentication account.' }
+    }
+
+    // 2. Create the user in our public.users table
+    const { error: dbError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: authData.user.id,
+        email,
+        full_name: fullName,
+        role,
+        branch_id: branchId,
+        phone,
+        is_active: true
+      })
+
+    if (dbError) {
+      // Cleanup auth user if DB insert fails
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+      return { success: false, message: `Database error: ${dbError.message}` }
+    }
+
+    revalidatePath('/dashboard/hq/users')
+    return { success: true, message: 'User created successfully.' }
+  } catch (err: any) {
+    console.error('Error creating user:', err)
+    return { success: false, message: 'An unexpected error occurred.' }
+  }
+}
+
 export async function createVehicle(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const errors = validateVehicle(formData)
 

@@ -73,7 +73,7 @@ export async function getRentals(filters?: {
 export async function getUsers(role?: string) {
   let query = supabase
     .from('users')
-    .select('id, full_name, email, role')
+    .select('id, full_name, email, role, phone, branch_id')
     .order('full_name')
 
   if (role) {

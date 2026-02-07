@@ -19,9 +19,21 @@ const handshakeStatusStyles: Record<string, string> = {
   CANCELLED: 'bg-gray-100 text-gray-700 border-gray-200',
 }
 
+const roleStyles: Record<string, string> = {
+  super_admin: 'bg-[#1a1a1a] text-white border-[#1a1a1a]',
+  hq: 'bg-gray-100 text-gray-900 border-gray-200',
+  branch_admin: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  driver: 'bg-blue-50 text-blue-700 border-blue-200',
+  tech: 'bg-orange-50 text-orange-700 border-orange-200',
+  corporate_admin: 'bg-purple-50 text-purple-700 border-purple-200',
+}
+
 export function StatusChip({ status }: { status: string }) {
-  const style = vehicleStatusStyles[status as VehicleStatus] || handshakeStatusStyles[status] || 'bg-gray-100 text-gray-800'
-  
+  const style = vehicleStatusStyles[status as VehicleStatus] ||
+    handshakeStatusStyles[status] ||
+    roleStyles[status] ||
+    'bg-gray-100 text-gray-800'
+
   return (
     <span
       className={cn(

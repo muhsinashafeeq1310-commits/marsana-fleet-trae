@@ -16,25 +16,31 @@ import {
   X,
   Wrench,
   Settings,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 import { signOut } from '@/lib/actions'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import { supabase } from '@/lib/supabase'
 
-const navigation = [
-  { name: 'Dashboard (HQ)', href: '/dashboard/hq', icon: LayoutDashboard },
-  { name: 'Dashboard (Branch)', href: '/dashboard/branch', icon: Store },
-  { name: 'Vehicles', href: '/vehicles', icon: Car },
-  { name: 'Handshakes', href: '/handshakes', icon: ArrowRightLeft },
-  { name: 'Inspections', href: '/inspections', icon: ClipboardCheck },
-  { name: 'Maintenance', href: '/maintenance', icon: Wrench },
-  { name: 'Rentals', href: '/rentals', icon: Calendar },
-  { name: 'Corporates', href: '/corporates', icon: Building2 },
-  { name: 'Alerts', href: '/alerts', icon: Bell },
-  { name: 'Driver Portal', href: '/driver', icon: User },
-]
+const getNavigation = (role?: string) => {
+  const baseItems = [
+    { name: 'Dashboard (HQ)', href: '/dashboard/hq', icon: LayoutDashboard, roles: ['super_admin', 'hq'] },
+    { name: 'Dashboard (Branch)', href: '/dashboard/branch', icon: Store, roles: ['super_admin', 'hq', 'branch_admin'] },
+    { name: 'Vehicles', href: '/vehicles', icon: Car, roles: ['super_admin', 'hq', 'branch_admin'] },
+    { name: 'Handshakes', href: '/handshakes', icon: ArrowRightLeft, roles: ['super_admin', 'hq', 'branch_admin', 'driver'] },
+    { name: 'Inspections', href: '/inspections', icon: ClipboardCheck, roles: ['super_admin', 'hq', 'branch_admin', 'driver'] },
+    { name: 'Maintenance', href: '/maintenance', icon: Wrench, roles: ['super_admin', 'hq', 'branch_admin', 'tech'] },
+    { name: 'Rentals', href: '/rentals', icon: Calendar, roles: ['super_admin', 'hq', 'branch_admin'] },
+    { name: 'Corporates', href: '/corporates', icon: Building2, roles: ['super_admin', 'hq', 'corporate_admin'] },
+    { name: 'Manage Team', href: '/dashboard/hq/users', icon: Users, roles: ['super_admin', 'hq'] },
+    { name: 'Alerts', href: '/alerts', icon: Bell, roles: ['super_admin', 'hq', 'branch_admin'] },
+    { name: 'Driver Portal', href: '/driver', icon: User, roles: ['super_admin', 'hq', 'driver'] },
+  ]
+
+  return baseItems.filter(item => !role || item.roles.includes(role))
+}
 
 export default function Sidebar({
   isOpen,
@@ -46,20 +52,26 @@ export default function Sidebar({
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
-  const [user, setUser] = useState<{ email?: string; full_name?: string } | null>(null)
+  const [user, setUser] = useState<{ email?: string; full_name?: string; role?: string } | null>(null)
 
   useEffect(() => {
     async function getUser() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (authUser) {
+        // Get role from public users table
+        const { data: userData } = await supabase.from('users').select('role').eq('id', authUser.id).single()
+
         setUser({
           email: authUser.email,
-          full_name: authUser.user_metadata?.full_name || 'System User'
+          full_name: authUser.user_metadata?.full_name || 'System User',
+          role: userData?.role
         })
       }
     }
     getUser()
   }, [])
+
+  const navigation = getNavigation(user?.role)
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -131,7 +143,7 @@ export default function Sidebar({
 
         <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <nav className="space-y-1.5">
-            {navigation.map((item) => {
+            {navigation.map((item: any) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
               return (
                 <Link
