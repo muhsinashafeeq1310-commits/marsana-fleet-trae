@@ -2,16 +2,11 @@
 
 import { supabaseAdmin } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
-import { Vehicle } from '@/types'
+import { Vehicle, VehicleStatus } from '@/types'
 import { logger } from '@/lib/logger'
+import type { ActionState } from '@/lib/action-types'
 
-export type ActionState = {
-  success: boolean
-  message?: string
-  errors?: Record<string, string[]>
-}
-
-export const REQUIRED_FIELDS = ['plate_no', 'make', 'model', 'current_status', 'current_branch_id']
+const REQUIRED_FIELDS = ['plate_no', 'make', 'model', 'current_status', 'current_branch_id']
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function validateVehicle(formData: any) {
@@ -286,7 +281,7 @@ export async function acceptHandshake(id: string): Promise<ActionState> {
   if (!user) {
     return { success: false, message: 'Unauthorized' }
   }
-  // const accepted_by = user.id
+  const accepted_by = user.id
 
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('status, vehicle_id').eq('id', id).single()
