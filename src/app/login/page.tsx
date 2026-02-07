@@ -1,42 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useActionState } from 'react'
 import { Lock, Mail, Car, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { login } from '@/lib/actions'
 
 export default function LoginPage() {
-    const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState<string | null>(null)
-
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError(null)
-
-        startTransition(async () => {
-            try {
-                const { error: loginError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                })
-
-                if (loginError) {
-                    setError(loginError.message)
-                    return
-                }
-
-                // Redirect to root, which will handle role-based routing
-                router.push('/')
-                router.refresh()
-            } catch (err: any) {
-                setError('An unexpected error occurred. Please try again.')
-                console.error('Login error:', err)
-            }
-        })
-    }
+    const [state, formAction, isPending] = useActionState(login, { success: false, message: '' })
 
     return (
         <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#e5e5e5] selection:bg-black selection:text-white">
@@ -56,11 +25,11 @@ export default function LoginPage() {
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md animate-fade-in [animation-delay:100ms]">
                 <div className="bg-white py-10 px-6 shadow-2xl shadow-black/5 sm:rounded-3xl sm:px-12 border border-white/20">
-                    <form className="space-y-6" onSubmit={handleLogin}>
-                        {error && (
+                    <form className="space-y-6" action={formAction}>
+                        {state?.message && (
                             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg flex items-start gap-3 animate-fade-in">
                                 <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-700 font-medium">{error}</p>
+                                <p className="text-sm text-red-700 font-medium">{state.message}</p>
                             </div>
                         )}
 
@@ -78,8 +47,6 @@ export default function LoginPage() {
                                     type="email"
                                     autoComplete="email"
                                     required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
                                     className="block w-full pl-11 pr-4 py-3 border-2 border-gray-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1a1a1a] focus:ring-0 transition-all duration-200 bg-gray-50/50"
                                     placeholder="name@example.com"
                                 />
@@ -100,8 +67,6 @@ export default function LoginPage() {
                                     type="password"
                                     autoComplete="current-password"
                                     required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full pl-11 pr-4 py-3 border-2 border-gray-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1a1a1a] focus:ring-0 transition-all duration-200 bg-gray-50/50"
                                     placeholder="••••••••"
                                 />

@@ -46,6 +46,35 @@ async function getCurrentUser() {
   return userData
 }
 
+export async function login(prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+
+  if (!email || !password) {
+    return { success: false, message: 'Email and password are required.' }
+  }
+
+  const supabase = await createClient()
+
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      return { success: false, message: error.message }
+    }
+
+    // On success, redirect to home
+    redirect('/')
+  } catch (err: any) {
+    if (err.message === 'NEXT_REDIRECT') throw err
+    console.error('Login error:', err)
+    return { success: false, message: 'Authentication failed. Please check your credentials.' }
+  }
+}
+
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
