@@ -1,31 +1,18 @@
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase-middleware'
 
-export function middleware() {
-  const response = NextResponse.next()
+export async function middleware(request: NextRequest) {
+  const { supabase, response } = createClient(request)
 
-  // Security Headers
+  // Security Headers (Keep existing ones)
   const headers = response.headers
-
-  // Prevent XSS attacks
   headers.set('X-XSS-Protection', '1; mode=block')
-
-  // Prevent clickjacking
   headers.set('X-Frame-Options', 'DENY')
-
-  // Prevent MIME-sniffing
   headers.set('X-Content-Type-Options', 'nosniff')
-
-  // Control referrer information
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-
-  // Enforce HTTPS (HSTS) - 1 year
   headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
 
-  // Content Security Policy (CSP)
-  // Note: 'unsafe-eval' and 'unsafe-inline' are often needed for Next.js dev mode/libraries. 
-  // In strict production, these should be removed or managed with nonces.
   const isDev = process.env.NODE_ENV === 'development'
-
   const csp = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com;
@@ -36,6 +23,31 @@ export function middleware() {
     frame-ancestors 'none';
   `
   headers.set('Content-Security-Policy', csp.replace(/\s{2,}/g, ' ').trim())
+
+  // Refresh session and check auth
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect dashboard routes
+  // Note: App labels (dashboard), vehicles, rentals, etc. are under standard paths or group paths.
+  // The matcher handles most of this, but we explicitly check here.
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+  const isProtectedRoute = !isAuthPage
+
+  if (!user && isProtectedRoute) {
+    // Not logged in, redirect to login
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isAuthPage) {
+    // Already logged in, redirect to home
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
+  }
 
   return response
 }

@@ -15,9 +15,13 @@ import {
   User,
   X,
   Wrench,
-  Settings
+  Settings,
+  LogOut
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { signOut } from '@/lib/actions'
+import ConfirmModal from '@/components/common/ConfirmModal'
+import { supabase } from '@/lib/supabase'
 
 const navigation = [
   { name: 'Dashboard (HQ)', href: '/dashboard/hq', icon: LayoutDashboard },
@@ -32,14 +36,36 @@ const navigation = [
   { name: 'Driver Portal', href: '/driver', icon: User },
 ]
 
-export default function Sidebar({ 
-  isOpen, 
-  setIsOpen 
-}: { 
+export default function Sidebar({
+  isOpen,
+  setIsOpen
+}: {
   isOpen: boolean
-  setIsOpen: (open: boolean) => void 
+  setIsOpen: (open: boolean) => void
 }) {
   const pathname = usePathname()
+  const [isPending, startTransition] = useTransition()
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  const [user, setUser] = useState<{ email?: string; full_name?: string } | null>(null)
+
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        setUser({
+          email: authUser.email,
+          full_name: authUser.user_metadata?.full_name || 'System User'
+        })
+      }
+    }
+    getUser()
+  }, [])
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      await signOut()
+    })
+  }
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -59,6 +85,17 @@ export default function Sidebar({
 
   return (
     <>
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        title="Sign Out"
+        message="Are you sure you want to log out of your account? You will need to sign in again to access the portal."
+        confirmText="Log Out"
+        variant="danger"
+        isLoading={isPending}
+      />
+
       {/* Mobile backdrop */}
       <div
         className={cn(
@@ -120,16 +157,26 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-white/5 space-y-1">
           <button className="flex w-full items-center rounded-xl px-4 py-3 text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all">
             <Settings className="mr-3 h-5 w-5" />
             Settings
           </button>
-          <div className="mt-4 flex items-center px-4">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">Admin User</p>
-              <p className="text-xs text-gray-500">admin@marsana.com</p>
+          <button
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="flex w-full items-center rounded-xl px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            Log Out
+          </button>
+
+          <div className="mt-4 flex items-center px-4 pt-4 border-t border-white/5">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-gray-600 to-gray-400 border border-white/10 shadow-inner flex items-center justify-center text-xs font-bold text-white">
+              {user?.full_name?.charAt(0) || 'U'}
+            </div>
+            <div className="ml-3 overflow-hidden">
+              <p className="text-sm font-semibold text-white truncate">{user?.full_name || 'Loading...'}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email || 'Please wait'}</p>
             </div>
           </div>
         </div>
@@ -137,3 +184,4 @@ export default function Sidebar({
     </>
   )
 }
+

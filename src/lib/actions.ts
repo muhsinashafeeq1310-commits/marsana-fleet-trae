@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { Vehicle, VehicleStatus } from '@/types'
 import { logger } from '@/lib/logger'
 import type { ActionState } from '@/lib/action-types'
+import { createClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
 
 const REQUIRED_FIELDS = ['plate_no', 'make', 'model', 'current_status', 'current_branch_id']
 
@@ -27,10 +29,27 @@ function validateVehicle(formData: any) {
   return errors
 }
 
-// Helper to get current user - in production this would verify auth session
+// Helper to get current user with real session validation
 async function getCurrentUser() {
-  const { data: users } = await supabaseAdmin.from('users').select('id, branch_id').limit(1)
-  return users?.[0]
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  // Fetch detailed user info including role from our custom users table
+  const { data: userData } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  return userData
+}
+
+export async function signOut() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/login')
 }
 
 export async function createVehicle(prevState: ActionState, formData: FormData): Promise<ActionState> {
