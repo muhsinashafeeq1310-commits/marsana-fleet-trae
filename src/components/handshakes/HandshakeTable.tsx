@@ -17,7 +17,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
   const [selectedHandshake, setSelectedHandshake] = useState<any | null>(null)
 
 
-   
+
   const [rejectReason, setRejectReason] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
@@ -33,7 +33,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRejectConfirm = () => {
     if (!rejectingHandshake) return
-    
+
     startTransition(async () => {
       handleAction(rejectHandshake, rejectingHandshake.id, [rejectReason])
       setIsRejectModalOpen(false)
@@ -52,12 +52,6 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
         alert((result as any).message)
       }
     })
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleAccept = (id: string) => {
-    setAcceptingId(id)
-    handleAction(acceptHandshake, id)
   }
 
   if (handshakes.length === 0) {
@@ -108,14 +102,14 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                     <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1">
                       <span className="text-xs text-gray-500 flex items-center gap-1">
                         From: <span className="font-medium text-gray-700">{handshake.from_branch?.name}</span>
                       </span>
                       <span className="text-xs text-gray-500 flex items-center gap-1">
                         To: <span className="font-medium text-gray-700">{handshake.to_branch?.name}</span>
                       </span>
-                     </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusChip status={handshake.status} />
@@ -128,7 +122,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                       {/* Action Buttons based on Status */}
                       {handshake.status === 'PENDING' && (
                         <>
-                          <button 
+                          <button
                             className="text-green-600 hover:text-green-900 p-1"
                             title="Accept"
                             disabled={isPending}
@@ -136,7 +130,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                           >
                             <CheckCircle className="h-5 w-5" />
                           </button>
-                          <button 
+                          <button
                             className="text-red-600 hover:text-red-900 p-1"
                             title="Reject"
                             disabled={isPending}
@@ -148,7 +142,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                       )}
 
                       {handshake.status === 'ACCEPTED' && (
-                        <button 
+                        <button
                           className="text-purple-600 hover:text-purple-900 p-1"
                           title="Mark In Transit"
                           disabled={isPending}
@@ -159,7 +153,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                       )}
 
                       {handshake.status === 'IN_TRANSIT' && (
-                        <button 
+                        <button
                           className="text-blue-600 hover:text-blue-900 p-1"
                           title="Complete Transfer"
                           disabled={isPending}
@@ -169,7 +163,7 @@ export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
                         </button>
                       )}
 
-                      <button 
+                      <button
                         className="text-gray-400 hover:text-gray-600 p-1"
                         title="View Details"
                       >

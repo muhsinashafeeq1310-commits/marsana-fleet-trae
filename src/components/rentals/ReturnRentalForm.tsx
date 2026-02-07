@@ -1,7 +1,8 @@
 'use client'
 
 import { Rental } from '@/types'
-import { closeRental, ActionState } from '@/lib/actions'
+import { closeRental } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { useState, useTransition } from 'react'
 
 interface ReturnRentalFormProps {
@@ -17,7 +18,7 @@ export default function ReturnRentalForm({ rental, onSuccess, onCancel }: Return
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     startTransition(async () => {
       const result = await closeRental(rental.id, formData)
       setState(result)
@@ -71,11 +72,11 @@ export default function ReturnRentalForm({ rental, onSuccess, onCancel }: Return
               id="end_fuel_level"
               className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
             >
-                <option value="1/1">Full (1/1)</option>
-                <option value="3/4">3/4</option>
-                <option value="1/2">1/2</option>
-                <option value="1/4">1/4</option>
-                <option value="Empty">Empty</option>
+              <option value="1/1">Full (1/1)</option>
+              <option value="3/4">3/4</option>
+              <option value="1/2">1/2</option>
+              <option value="1/4">1/4</option>
+              <option value="Empty">Empty</option>
             </select>
           </div>
         </div>

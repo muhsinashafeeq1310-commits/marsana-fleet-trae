@@ -1,8 +1,9 @@
 'use client'
 
- 
+
 import { Vehicle, Branch } from '@/types'
-import { createVehicle, updateVehicle, ActionState } from '@/lib/actions'
+import { createVehicle, updateVehicle } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { useState, useTransition } from 'react'
 
 interface VehicleFormProps {
@@ -20,7 +21,7 @@ export default function VehicleForm({ branches, drivers = [], vehicle, onSuccess
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     // Add ID and Version for update
     if (vehicle) {
       formData.append('id', vehicle.id)
@@ -31,7 +32,7 @@ export default function VehicleForm({ branches, drivers = [], vehicle, onSuccess
       const action = vehicle ? updateVehicle : createVehicle
       const result = await action(state, formData)
       setState(result)
-      
+
       if (result.success) {
         onSuccess()
       }

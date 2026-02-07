@@ -1,7 +1,8 @@
 'use client'
 
 import { Vehicle, Corporate } from '@/types'
-import { createRental, ActionState } from '@/lib/actions'
+import { createRental } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { useState, useTransition } from 'react'
 
 interface RentalFormProps {
@@ -22,7 +23,7 @@ export default function RentalForm({ vehicles, corporates = [], onSuccess, onCan
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     startTransition(async () => {
       const result = await createRental(state, formData)
       setState(result)
@@ -108,7 +109,7 @@ export default function RentalForm({ vehicles, corporates = [], onSuccess, onCan
 
         {/* Customer Details */}
         <div className="sm:col-span-2">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Customer Information</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Customer Information</h3>
         </div>
 
         {rentalType === 'CORPORATE' && (
@@ -165,7 +166,7 @@ export default function RentalForm({ vehicles, corporates = [], onSuccess, onCan
 
         {/* Rental Details */}
         <div className="sm:col-span-2">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2 mt-4">Rental Details</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2 mt-4">Rental Details</h3>
         </div>
 
         <div>
@@ -224,11 +225,11 @@ export default function RentalForm({ vehicles, corporates = [], onSuccess, onCan
               id="start_fuel_level"
               className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
             >
-                <option value="1/1">Full (1/1)</option>
-                <option value="3/4">3/4</option>
-                <option value="1/2">1/2</option>
-                <option value="1/4">1/4</option>
-                <option value="Empty">Empty</option>
+              <option value="1/1">Full (1/1)</option>
+              <option value="3/4">3/4</option>
+              <option value="1/2">1/2</option>
+              <option value="1/4">1/4</option>
+              <option value="Empty">Empty</option>
             </select>
           </div>
         </div>

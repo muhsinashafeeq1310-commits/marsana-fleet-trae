@@ -1,7 +1,8 @@
 'use client'
 
 import { Vehicle, Branch } from '@/types'
-import { createHandshake, ActionState } from '@/lib/actions'
+import { createHandshake } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { useState, useTransition } from 'react'
 
 interface HandshakeFormProps {
@@ -21,16 +22,16 @@ export default function HandshakeForm({ vehicles, branches, onSuccess, onCancel 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     // Manually append the inferred from_branch_id
     if (selectedVehicle?.current_branch_id) {
-        formData.append('from_branch_id', selectedVehicle.current_branch_id)
+      formData.append('from_branch_id', selectedVehicle.current_branch_id)
     }
 
     const toBranchId = formData.get('to_branch_id')
     if (selectedVehicle && selectedVehicle.current_branch_id === toBranchId) {
-       setState({ success: false, message: 'Destination branch must be different from current branch' })
-       return
+      setState({ success: false, message: 'Destination branch must be different from current branch' })
+      return
     }
 
     startTransition(async () => {
@@ -106,8 +107,8 @@ export default function HandshakeForm({ vehicles, branches, onSuccess, onCancel 
             >
               <option value="">Select Destination Branch</option>
               {branches.map((branch) => (
-                <option 
-                  key={branch.id} 
+                <option
+                  key={branch.id}
                   value={branch.id}
                   disabled={selectedVehicle?.current_branch_id === branch.id}
                 >

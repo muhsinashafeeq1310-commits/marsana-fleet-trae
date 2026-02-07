@@ -91,7 +91,7 @@ export async function getUsers(role?: string) {
 }
 
 export async function getAlerts(filters?: {
-  type?: AlertType
+  type?: AlertType | 'all'
   is_resolved?: boolean
 }) {
   let query = supabase
@@ -144,7 +144,7 @@ export async function getMaintenanceTickets(filters?: {
     query = query.eq('vehicle_id', filters.vehicle_id)
   }
 
-  if (filters?.priority && filters.priority !== 'all') {
+  if (filters?.priority && (filters.priority as string) !== 'all') {
     query = query.eq('priority', filters.priority)
   }
 
@@ -271,7 +271,7 @@ export async function getHandshakes(filters?: {
 
 export async function getInspections(filters?: {
   vehicle_id?: string
-  result?: InspectionResult
+  result?: InspectionResult | 'all'
 }) {
   let query = supabase
     .from('inspections')
@@ -342,7 +342,7 @@ export async function getDriverAssignments(driverId: string) {
 
   // Fetch active tasks (Handshakes) where driver is the requester or acceptor?
   // Or maybe specific tasks. For now let's just show assigned vehicles and recent alerts.
-  
+
   return {
     vehicles: vehicles as Vehicle[] || []
   }

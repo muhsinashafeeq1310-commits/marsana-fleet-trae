@@ -388,7 +388,7 @@ export async function completeHandshake(id: string): Promise<ActionState> {
   if (!user) {
     return { success: false, message: 'Unauthorized' }
   }
-  // const completed_by = user.id
+  const completed_by = user.id
 
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('*').eq('id', id).single()

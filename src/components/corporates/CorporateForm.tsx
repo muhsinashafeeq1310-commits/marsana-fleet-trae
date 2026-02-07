@@ -1,7 +1,8 @@
 'use client'
 
 import { Corporate } from '@/types'
-import { createCorporate, updateCorporate, ActionState } from '@/lib/actions'
+import { createCorporate, updateCorporate } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { useState, useTransition } from 'react'
 
 interface CorporateFormProps {
@@ -17,7 +18,7 @@ export default function CorporateForm({ corporate, onSuccess, onCancel }: Corpor
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     if (corporate) {
       formData.append('id', corporate.id)
     }

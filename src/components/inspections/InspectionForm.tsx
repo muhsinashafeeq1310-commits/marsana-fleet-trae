@@ -1,7 +1,8 @@
 'use client'
 
 import { Vehicle } from '@/types'
-import { createInspection, ActionState } from '@/lib/actions'
+import { createInspection } from '@/lib/actions'
+import type { ActionState } from '@/lib/action-types'
 import { supabase } from '@/lib/supabase'
 import { useState, useTransition } from 'react'
 
@@ -35,7 +36,7 @@ export default function InspectionForm({ vehicles, onSuccess, onCancel }: Inspec
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
+
     formData.set('checklist', JSON.stringify(checklist))
 
     // Handle File Upload
@@ -65,7 +66,7 @@ export default function InspectionForm({ vehicles, onSuccess, onCancel }: Inspec
             const { data: { publicUrl } } = supabase.storage
               .from('inspection-photos')
               .getPublicUrl(filePath)
-            
+
             photoUrls.push(publicUrl)
           }
         }
@@ -77,7 +78,7 @@ export default function InspectionForm({ vehicles, onSuccess, onCancel }: Inspec
     }
 
     formData.set('photos', JSON.stringify(photoUrls))
-    
+
     startTransition(async () => {
       const result = await createInspection(state, formData)
       setState(result)
@@ -202,7 +203,7 @@ export default function InspectionForm({ vehicles, onSuccess, onCancel }: Inspec
             Photos
           </label>
           <div className="mt-2">
-             <input
+            <input
               type="file"
               id="photos"
               name="photos"
