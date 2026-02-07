@@ -18,11 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Temporarily disabled cache to force fresh install with updated package-lock.json
-          # cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         
       - name: Lint
         run: npm run lint
