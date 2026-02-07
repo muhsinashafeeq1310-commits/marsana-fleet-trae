@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Vehicle, Branch, Handshake, Inspection, MaintenanceTicket, Alert, Rental, Corporate, VehicleStatus, HandshakeStatus, InspectionResult, MaintenancePriority, AlertType } from '@/types'
+import { Vehicle, Branch, Inspection, MaintenanceTicket, Corporate, VehicleStatus, HandshakeStatus, InspectionResult, MaintenancePriority, AlertType } from '@/types'
 
 // ... existing imports
 
@@ -66,7 +66,8 @@ export async function getRentals(filters?: {
     throw new Error('Failed to fetch rentals')
   }
 
-  return data as Rental[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as unknown as any[]
 }
 
 export async function getUsers(role?: string) {
@@ -98,7 +99,7 @@ export async function getAlerts(filters?: {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (filters?.type && filters.type !== 'all' as any) {
+  if (filters?.type && filters.type !== 'all') {
     query = query.eq('type', filters.type)
   }
 
@@ -113,7 +114,8 @@ export async function getAlerts(filters?: {
     throw new Error('Failed to fetch alerts')
   }
 
-  return data as Alert[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as unknown as any[]
 }
 
 export async function getMaintenanceTickets(filters?: {
@@ -142,7 +144,7 @@ export async function getMaintenanceTickets(filters?: {
     query = query.eq('vehicle_id', filters.vehicle_id)
   }
 
-  if (filters?.priority && filters.priority !== 'all' as any) {
+  if (filters?.priority && filters.priority !== 'all') {
     query = query.eq('priority', filters.priority)
   }
 
@@ -263,7 +265,8 @@ export async function getHandshakes(filters?: {
     throw new Error('Failed to fetch handshakes')
   }
 
-  return data as Handshake[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as unknown as any[]
 }
 
 export async function getInspections(filters?: {
@@ -291,7 +294,7 @@ export async function getInspections(filters?: {
     query = query.eq('vehicle_id', filters.vehicle_id)
   }
 
-  if (filters?.result && filters.result !== 'all' as any) {
+  if (filters?.result && filters.result !== 'all') {
     query = query.eq('result', filters.result)
   }
 

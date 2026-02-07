@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 
 export default function TestConnectionPage() {
-  const [status, setStatus] = useState<string>('Testing connection...')
-  const [envCheck, setEnvCheck] = useState<any>({})
+  const [status, setStatus] = useState<string>('loading')
+  const [envCheck, setEnvCheck] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     async function checkConnection() {
@@ -23,15 +23,13 @@ export default function TestConnectionPage() {
       }
 
       try {
-        // Simple check: get session (doesn't require DB tables)
-        const { data, error } = await supabase.auth.getSession()
-        if (error) {
-          setStatus(`Connection failed: ${error.message}`)
-        } else {
-          setStatus('Success: Connected to Supabase (Auth Service reachable)')
-        }
-      } catch (err: any) {
-        setStatus(`Unexpected error: ${err.message}`)
+        const { error } = await supabase.from('vehicles').select('count').limit(1)
+        if (error) throw error
+        setStatus('Success: Connected to Supabase')
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const message = err instanceof Error ? err.message : (err as any)?.message || 'Unknown error'
+        setStatus(`Connection failed: ${message}`)
       }
     }
 

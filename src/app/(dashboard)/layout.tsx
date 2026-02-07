@@ -17,7 +17,8 @@ export default function DashboardLayout({
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
       <div className="flex flex-1 flex-col overflow-hidden relative">
-        <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header />
+
         
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 scroll-smooth">
           <div className="mx-auto max-w-7xl animate-fade-in">

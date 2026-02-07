@@ -1,6 +1,7 @@
 'use client'
 
-import { Vehicle, Branch, VehicleStatus } from '@/types'
+ 
+import { Vehicle, Branch } from '@/types'
 import { createVehicle, updateVehicle, ActionState } from '@/lib/actions'
 import { useState, useTransition } from 'react'
 

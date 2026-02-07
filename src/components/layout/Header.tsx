@@ -2,11 +2,8 @@
 
 import { LogOut, UserCircle } from 'lucide-react'
 
-export default function Header({ 
-  toggleSidebar 
-}: { 
-  toggleSidebar: () => void 
-}) {
+ 
+export default function Header() {
   // Dummy user data
   const user = {
     name: 'Super Admin',

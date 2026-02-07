@@ -1,5 +1,4 @@
 import { getRentals, getVehicles, getCorporates } from '@/lib/api'
-import { Rental } from '@/types'
 import RentalFilters from '@/components/rentals/RentalFilters'
 import RentalTable from '@/components/rentals/RentalTable'
 

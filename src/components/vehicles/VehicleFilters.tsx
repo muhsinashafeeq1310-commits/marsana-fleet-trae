@@ -1,6 +1,7 @@
 'use client'
 
-import { Branch, VehicleStatus } from '@/types'
+ 
+import { Branch } from '@/types'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, Plus } from 'lucide-react'
 import { useDebouncedCallback } from 'use-debounce'
