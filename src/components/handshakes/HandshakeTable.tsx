@@ -7,21 +7,11 @@ import { useState, useTransition } from 'react'
 import { acceptHandshake, rejectHandshake, markHandshakeInTransit, completeHandshake } from '@/lib/actions'
 import ConfirmModal from '@/components/common/ConfirmModal'
 
-interface HandshakeTableProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handshakes: any[] // We'll improve this type later
-  currentBranchId: string
-  onAccept: (id: string) => void
-  onReject: (id: string) => void
-  onTransit: (id: string) => void
-  onComplete: (id: string) => void
-}
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function HandshakeTable({ handshakes }: { handshakes: any[] }) {
   const [isPending, startTransition] = useTransition()
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [completingId, setCompletingId] = useState<string | null>(null)
-  const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   const [selectedHandshake, setSelectedHandshake] = useState<any | null>(null)

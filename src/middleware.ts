@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
-export function middleware(_request: NextRequest) {
+export function middleware() {
   const response = NextResponse.next()
 
   // Security Headers
@@ -9,24 +8,24 @@ export function middleware(_request: NextRequest) {
 
   // Prevent XSS attacks
   headers.set('X-XSS-Protection', '1; mode=block')
-  
+
   // Prevent clickjacking
   headers.set('X-Frame-Options', 'DENY')
-  
+
   // Prevent MIME-sniffing
   headers.set('X-Content-Type-Options', 'nosniff')
-  
+
   // Control referrer information
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  
+
   // Enforce HTTPS (HSTS) - 1 year
   headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-  
+
   // Content Security Policy (CSP)
   // Note: 'unsafe-eval' and 'unsafe-inline' are often needed for Next.js dev mode/libraries. 
   // In strict production, these should be removed or managed with nonces.
   const isDev = process.env.NODE_ENV === 'development'
-  
+
   const csp = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com;
