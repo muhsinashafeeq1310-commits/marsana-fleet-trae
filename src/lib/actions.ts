@@ -55,24 +55,25 @@ export async function login(prevState: ActionState, formData: FormData): Promise
   }
 
   const supabase = await createClient()
+  let loginError = null
 
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-
-    if (error) {
-      return { success: false, message: error.message }
-    }
-
-    // On success, redirect to home
-    redirect('/')
+    if (error) loginError = error.message
   } catch (err: any) {
-    if (err.message === 'NEXT_REDIRECT') throw err
-    console.error('Login error:', err)
-    return { success: false, message: 'Authentication failed. Please check your credentials.' }
+    console.error('Login exception:', err)
+    return { success: false, message: 'An unexpected connection error occurred.' }
   }
+
+  if (loginError) {
+    return { success: false, message: loginError }
+  }
+
+  // Redirect MUST be outside try/catch in Next.js Server Actions
+  redirect('/')
 }
 
 export async function signOut() {
