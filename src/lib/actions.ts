@@ -22,6 +22,13 @@ function validateVehicle(formData: any) {
       errors[field] = `${field.replace(/_/g, ' ')} is required`
     }
   })
+
+  // Validate VIN length (must not exceed 17 characters)
+  const vin = formData.get('vin')
+  if (vin && vin.length > 17) {
+    errors.vin = 'VIN cannot be longer than 17 characters'
+  }
+
   return errors
 }
 
@@ -33,7 +40,7 @@ async function getCurrentUser() {
 
 export async function createVehicle(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const errors = validateVehicle(formData)
-  
+
   if (Object.keys(errors).length > 0) {
     const formattedErrors: Record<string, string[]> = {}
     Object.keys(errors).forEach((key) => {
@@ -222,7 +229,7 @@ export async function createHandshake(prevState: ActionState, formData: FormData
   // Auth check
   const user = await getCurrentUser()
   if (!user) {
-     return { success: false, message: 'Unauthorized' }
+    return { success: false, message: 'Unauthorized' }
   }
   const requested_by = user.id
 
@@ -232,18 +239,18 @@ export async function createHandshake(prevState: ActionState, formData: FormData
   try {
     // 1. Verify vehicle is AVAILABLE and in from_branch
     const { data: vehicle, error: vehicleError } = await supabaseAdmin
-        .from('vehicles')
-        .select('current_status, current_branch_id')
-        .eq('id', vehicle_id)
-        .single()
-    
+      .from('vehicles')
+      .select('current_status, current_branch_id')
+      .eq('id', vehicle_id)
+      .single()
+
     if (vehicleError || !vehicle) throw new Error('Vehicle not found')
-    
+
     if (vehicle.current_branch_id !== from_branch_id) {
-        return { success: false, message: 'Vehicle is not at the source branch' }
+      return { success: false, message: 'Vehicle is not at the source branch' }
     }
     if (vehicle.current_status !== 'AVAILABLE') {
-        return { success: false, message: 'Vehicle is not AVAILABLE' }
+      return { success: false, message: 'Vehicle is not AVAILABLE' }
     }
 
     // 2. Create Handshake
@@ -284,29 +291,29 @@ export async function acceptHandshake(id: string): Promise<ActionState> {
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('status, vehicle_id').eq('id', id).single()
     if (handshake?.status !== 'PENDING') {
-        return { success: false, message: 'Handshake is not in PENDING state' }
+      return { success: false, message: 'Handshake is not in PENDING state' }
     }
 
     // Update Handshake
     const { error: hsError } = await supabaseAdmin
-        .from('handshakes')
-        .update({ 
-            status: 'ACCEPTED', 
-            accepted_by, 
-        })
-        .eq('id', id)
+      .from('handshakes')
+      .update({
+        status: 'ACCEPTED',
+        accepted_by,
+      })
+      .eq('id', id)
 
     if (hsError) throw hsError
 
     // Update Vehicle
     const { error: vError } = await supabaseAdmin
-        .from('vehicles')
-        .update({ current_status: 'IN_TRANSIT' })
-        .eq('id', handshake.vehicle_id)
+      .from('vehicles')
+      .update({ current_status: 'IN_TRANSIT' })
+      .eq('id', handshake.vehicle_id)
 
     if (vError) {
-        await supabaseAdmin.from('handshakes').update({ status: 'PENDING', accepted_by: null }).eq('id', id)
-        throw vError
+      await supabaseAdmin.from('handshakes').update({ status: 'PENDING', accepted_by: null }).eq('id', id)
+      throw vError
     }
 
     revalidatePath('/handshakes')
@@ -330,16 +337,16 @@ export async function rejectHandshake(id: string, reason: string): Promise<Actio
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('status').eq('id', id).single()
     if (handshake?.status !== 'PENDING') {
-        return { success: false, message: 'Handshake is not in PENDING state' }
+      return { success: false, message: 'Handshake is not in PENDING state' }
     }
 
     const { error } = await supabaseAdmin
-        .from('handshakes')
-        .update({ 
-            status: 'REJECTED', 
-            rejection_reason: reason 
-        })
-        .eq('id', id)
+      .from('handshakes')
+      .update({
+        status: 'REJECTED',
+        rejection_reason: reason
+      })
+      .eq('id', id)
 
     if (error) throw error
 
@@ -357,16 +364,16 @@ export async function markHandshakeInTransit(id: string): Promise<ActionState> {
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('status').eq('id', id).single()
     if (handshake?.status !== 'ACCEPTED') {
-        return { success: false, message: 'Handshake must be ACCEPTED first' }
+      return { success: false, message: 'Handshake must be ACCEPTED first' }
     }
 
     const { error } = await supabaseAdmin
-        .from('handshakes')
-        .update({ 
-            status: 'IN_TRANSIT', 
-            actual_departure_at: new Date().toISOString()
-        })
-        .eq('id', id)
+      .from('handshakes')
+      .update({
+        status: 'IN_TRANSIT',
+        actual_departure_at: new Date().toISOString()
+      })
+      .eq('id', id)
 
     if (error) throw error
 
@@ -391,32 +398,32 @@ export async function completeHandshake(id: string): Promise<ActionState> {
   try {
     const { data: handshake } = await supabaseAdmin.from('handshakes').select('*').eq('id', id).single()
     if (handshake?.status !== 'IN_TRANSIT') {
-        return { success: false, message: 'Handshake must be IN_TRANSIT to complete' }
+      return { success: false, message: 'Handshake must be IN_TRANSIT to complete' }
     }
 
     // 1. Update Handshake
     const { error: hsError } = await supabaseAdmin
-        .from('handshakes')
-        .update({ 
-            status: 'COMPLETED', 
-            completed_by,
-            actual_arrival_at: new Date().toISOString()
-        })
-        .eq('id', id)
+      .from('handshakes')
+      .update({
+        status: 'COMPLETED',
+        completed_by,
+        actual_arrival_at: new Date().toISOString()
+      })
+      .eq('id', id)
 
     if (hsError) throw hsError
 
     // 2. Update Vehicle (Move to new branch, set status PENDING_INSPECTION)
     const { error: vError } = await supabaseAdmin
-        .from('vehicles')
-        .update({ 
-            current_status: 'PENDING_INSPECTION',
-            current_branch_id: handshake.to_branch_id
-        })
-        .eq('id', handshake.vehicle_id)
+      .from('vehicles')
+      .update({
+        current_status: 'PENDING_INSPECTION',
+        current_branch_id: handshake.to_branch_id
+      })
+      .eq('id', handshake.vehicle_id)
 
     if (vError) {
-        throw vError
+      throw vError
     }
 
     revalidatePath('/handshakes')
@@ -472,72 +479,72 @@ export async function createInspection(prevState: ActionState, formData: FormDat
 
     // 2. Fetch Vehicle for side effects
     const { data: vehicle, error: vError } = await supabaseAdmin
-        .from('vehicles')
-        .select('plate_no, current_status, current_branch_id')
-        .eq('id', vehicle_id)
-        .single()
-    
+      .from('vehicles')
+      .select('plate_no, current_status, current_branch_id')
+      .eq('id', vehicle_id)
+      .single()
+
     if (vError || !vehicle) {
-        console.error('Vehicle not found for inspection side effects', vError)
-        throw new Error('Vehicle not found')
+      console.error('Vehicle not found for inspection side effects', vError)
+      throw new Error('Vehicle not found')
     }
 
     // 3. Handle Side Effects
     if (result === 'DAMAGE' || result === 'SERVICE_DUE') {
-        // A. Create Maintenance Ticket
-        const ticket_ref = `MT-${Date.now().toString().slice(-6)}`
-        const { error: ticketError } = await supabaseAdmin
-            .from('maintenance_tickets')
-            .insert({
-                ticket_ref,
-                vehicle_id,
-                title: `Inspection found ${result} on ${vehicle.plate_no}`,
-                description: `Automatically created from inspection. Notes: ${notes}`,
-                priority: result === 'DAMAGE' ? 'HIGH' : 'MEDIUM',
-                status: 'OPEN',
-                related_inspection_id: inspection.id
-            })
-        
-        if (ticketError) console.error('Failed to create maintenance ticket', ticketError)
+      // A. Create Maintenance Ticket
+      const ticket_ref = `MT-${Date.now().toString().slice(-6)}`
+      const { error: ticketError } = await supabaseAdmin
+        .from('maintenance_tickets')
+        .insert({
+          ticket_ref,
+          vehicle_id,
+          title: `Inspection found ${result} on ${vehicle.plate_no}`,
+          description: `Automatically created from inspection. Notes: ${notes}`,
+          priority: result === 'DAMAGE' ? 'HIGH' : 'MEDIUM',
+          status: 'OPEN',
+          related_inspection_id: inspection.id
+        })
 
-        // B. Create Alert
-        const { error: alertError } = await supabaseAdmin
-            .from('alerts')
-            .insert({
-                type: 'MAINTENANCE_DUE',
-                severity: result === 'DAMAGE' ? 'HIGH' : 'MEDIUM',
-                title: `Maintenance Required: ${vehicle.plate_no}`,
-                message: `Inspection result: ${result}. Check maintenance tickets.`,
-                reference_type: 'inspections',
-                reference_id: inspection.id,
-                branch_id: vehicle.current_branch_id,
-                vehicle_id,
-                assigned_to: null // Unassigned initially
-            })
-        
-        if (alertError) console.error('Failed to create alert', alertError)
+      if (ticketError) console.error('Failed to create maintenance ticket', ticketError)
 
-        // C. Update Vehicle Status
-        const { error: updateError } = await supabaseAdmin
-            .from('vehicles')
-            .update({ current_status: 'MAINTENANCE' })
-            .eq('id', vehicle_id)
-        
-        if (updateError) console.error('Failed to update vehicle status', updateError)
+      // B. Create Alert
+      const { error: alertError } = await supabaseAdmin
+        .from('alerts')
+        .insert({
+          type: 'MAINTENANCE_DUE',
+          severity: result === 'DAMAGE' ? 'HIGH' : 'MEDIUM',
+          title: `Maintenance Required: ${vehicle.plate_no}`,
+          message: `Inspection result: ${result}. Check maintenance tickets.`,
+          reference_type: 'inspections',
+          reference_id: inspection.id,
+          branch_id: vehicle.current_branch_id,
+          vehicle_id,
+          assigned_to: null // Unassigned initially
+        })
+
+      if (alertError) console.error('Failed to create alert', alertError)
+
+      // C. Update Vehicle Status
+      const { error: updateError } = await supabaseAdmin
+        .from('vehicles')
+        .update({ current_status: 'MAINTENANCE' })
+        .eq('id', vehicle_id)
+
+      if (updateError) console.error('Failed to update vehicle status', updateError)
 
     } else if (result === 'CLEAN' && vehicle.current_status === 'PENDING_INSPECTION') {
-        // D. Update Vehicle Status to AVAILABLE
-        const { error: updateError } = await supabaseAdmin
-            .from('vehicles')
-            .update({ current_status: 'AVAILABLE' })
-            .eq('id', vehicle_id)
-        
-        if (updateError) console.error('Failed to update vehicle status', updateError)
+      // D. Update Vehicle Status to AVAILABLE
+      const { error: updateError } = await supabaseAdmin
+        .from('vehicles')
+        .update({ current_status: 'AVAILABLE' })
+        .eq('id', vehicle_id)
+
+      if (updateError) console.error('Failed to update vehicle status', updateError)
     }
 
     revalidatePath('/inspections')
     revalidatePath('/vehicles')
-    revalidatePath('/alerts') 
+    revalidatePath('/alerts')
     return { success: true, message: 'Inspection created successfully' }
   } catch (error: unknown) {
     logger.error('Create inspection error:', error)
@@ -671,7 +678,7 @@ export async function closeRental(id: string, formData: FormData): Promise<Actio
     // 2. Update Vehicle Status
     const { error: vehicleError } = await supabaseAdmin
       .from('vehicles')
-      .update({ 
+      .update({
         current_status: 'PENDING_INSPECTION',
         mileage: end_mileage // Update vehicle mileage to the return mileage
       })
