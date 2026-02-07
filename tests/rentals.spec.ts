@@ -1,34 +1,59 @@
-// Updated test file with proper wait times and retry logic.
+import { test, expect } from '@playwright/test';
 
-import { expect } from 'chai';
-import { Page } from 'playwright';
+test.describe('Rentals Management', () => {
+  const uniqueId = Date.now().toString();
+  const customerName = `Customer ${uniqueId}`;
+  
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/rentals');
+    await page.waitForLoadState('networkidle');
+  });
 
-describe('Rentals', function() {
-    let page: Page;
+  test('should create a new rental agreement', async ({ page }) => {
+    // Click the "New Rental" button
+    await page.getByRole('button', { name: 'New Rental' }).click();
+    
+    // Wait for the dialog to appear with increased timeout
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'New Rental Agreement' })).toBeVisible({ timeout: 5000 });
 
-    beforeEach(async () => {
-        page = await browser.newPage();
-    });
+    // Wait for select to be populated
+    const vehicleSelect = page.locator('select[name="vehicle_id"]');
+    await vehicleSelect.waitFor({ state: 'visible', timeout: 5000 });
+    
+    // Check if there are available options
+    const options = await vehicleSelect.locator('option').count();
+    if (options > 1) {
+      await vehicleSelect.selectOption({ index: 1 });
+    } else {
+      // Skip test if no vehicles available
+      test.skip();
+    }
 
-    afterEach(async () => {
-        await page.close();
-    });
+    await page.fill('input[name="customer_name"]', customerName);
+    await page.fill('input[name="customer_phone"]', '1234567890');
+    
+    // Dates
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const formatDateTime = (date: Date) => date.toISOString().slice(0, 16);
+    
+    await page.fill('input[name="start_at"]', formatDateTime(now));
+    await page.fill('input[name="end_at"]', formatDateTime(tomorrow));
 
-    it('should check dialog visibility after navigation', async () => {
-        await page.goto('your-navigation-url-here');
-        await page.waitForLoadState('networkidle'); // Ensures all network requests are finished
-        await page.waitForSelector('selector-for-your-dialog', { timeout: 5000 }); // Wait for dialog to be present
+    await page.getByRole('button', { name: 'Create Rental' }).click();
 
-        const checkDialogVisibility = async (maxRetries = 3, delay = 1000) => {
-            for (let i = 0; i < maxRetries; i++) {
-                const isVisible = await page.isVisible('selector-for-your-dialog');
-                if (isVisible) return;
-                await new Promise(resolve => setTimeout(resolve, delay)); // Delay before retry
-            }
-            throw new Error('Dialog not visible after retries.');
-        };
-
-        await checkDialogVisibility(); // Call the retry logic for checking dialog visibility
-        expect(await page.isVisible('selector-for-your-dialog')).to.be.true;
-    });
+    // Verify success - wait for dialog to close
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 5000 });
+    
+    // Wait for page to update
+    await page.waitForLoadState('networkidle');
+    
+    // Search for the rental
+    await page.getByPlaceholder('Search contract or customer...').fill(customerName);
+    await expect(page.getByText(customerName)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('ACTIVE')).toBeVisible({ timeout: 5000 });
+  });
 });
